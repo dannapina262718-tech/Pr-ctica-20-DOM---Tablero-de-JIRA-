@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tablero de jira</title>
+    
+   <style>
+        /* Estilos tipo Jira: Fondo gris claro, tarjetas blancas con sombra suave */
+        body {
+            background-color: #f4f5f7;
+            font-family: Roboto, sans-serif;
+        }
+
+
+        .jira-card {
+            background: #fff;
+            width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #0052cc;
+            /* Color corporativo tipo Jira */
+        }
+
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+
+        input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #dfe1e6;
+            border-radius: 3px;
+        }
+
+
+        input[type="text"]:focus {
+            border-color: #4c9aff;
+            outline: none;
+        }
+
+
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ebecf0;
+            background: #fff;
+        }
+
+
+        .task-item:hover {
+            background-color: #f4f5f7;
+        }
+
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            background: #e9e9e9;
+        }
+
+
+        .btn-add {
+            background: #0052cc;
+            color: white;
+        }
+
+
+        .btn-edit {
+            color: #5e6c84;
+        }
+
+
+        .btn-delete {
+            color: #de350b;
+        }
+
+
+        .completed span {
+            text-decoration: line-through;
+            color: #5e6c84;
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="jira-card">
+        <h3>backlog de desarrollo</h3>
+        <div class="input-group"> 
+            <input type="text" id="taskInput" class="imp" placeholder="Añadir una torre">
+            <button id="addBtn" class="btn-add"> crear</button>
+        </div>
+
+        <ul id="tasklist" class="tasklits">
+
+        </ul>
+    </div>
+
+    <script>
+        // Práctica 20 - Gestor de tareas
+        // Autor: Danna Piña
+
+        let task = [];
+
+        const input = document.getElementById("taskInput")
+
+        const addBtn = document.querySelector(".btn-add")
+
+        const list = document.querySelector("ul")
+
+        input.addEventListener("keydown", (e)=>{
+            if(e.key === "Enter") addTask();
+        })
+
+        addBtn.addEventListener("click", addTask)
+
+        function addTask(){
+            if(input.value.trim() ==="") return;
+
+            const newTask = {
+                id:Date.now(),
+                text: input.value.trim(),
+                completed: false
+            }
+            task.push(newTask);
+            input.value="";
+            guardar();              // Ejercicio 5: guarda cada cambio
+            render();
+        }
+
+        function render(){
+            list.innerHTML = "";
+
+            task.forEach(task=>{
+                const li = document.createElement("li");
+                li.className = "task-item" + (task.completed ? " completed" : "");  // mantiene el estado
+                li.dataset.id = task.id;
+
+                // (span en lugar de p para que el CSS ".completed span" tache el texto)
+                const span = document.createElement("span");
+                span.className = "task-text";
+                const texto = document.createTextNode(task.text);
+                span.appendChild(texto);
+
+                // Botones de acción (necesarios para delegar los eventos del ejercicio 3)
+                const actions = document.createElement("div");
+                actions.className = "actions";
+
+                const btnEdit = document.createElement("button");
+                btnEdit.className = "btn-edit";
+                btnEdit.textContent = "Editar";
+
+                const btnDelete = document.createElement("button");
+                btnDelete.className = "btn-delete";
+                btnDelete.textContent = "Eliminar";
+
+                actions.appendChild(btnEdit);
+                actions.appendChild(btnDelete);
+                li.appendChild(span);
+                li.appendChild(actions);
+                list.appendChild(li)
+
+            })
+        }
+
+        /* ================= EJERCICIO 3: Delegación de eventos =================
+        Un solo listener 'click' en el <ul> padre. event.target indica qué
+        elemento hijo (texto, editar o eliminar) fue presionado. */
+        list.addEventListener("click", (event)=>{
+            const target = event.target;
+            const li = target.closest("li");
+            if(!li) return;
+
+            const tarea = task.find(t => t.id === Number(li.dataset.id));
+            if(!tarea) return;
+
+            /* ============ EJERCICIO 4: Operaciones CRUD ============ */
+
+            // Eliminar: remueve el <li> completo del DOM con parentNode.removeChild()
+            if(target.classList.contains("btn-delete")){
+                li.parentNode.removeChild(li);
+                task = task.filter(t => t.id !== tarea.id);
+                guardar();
+                return;
+            }
+
+            // Editar: prompt() con el texto actual y actualiza el nodo correspondiente
+            if(target.classList.contains("btn-edit")){
+                const nuevoTexto = prompt("Editar tarea:", tarea.text);
+                if(nuevoTexto !== null && nuevoTexto.trim() !== ""){
+                    tarea.text = nuevoTexto.trim();
+                    li.querySelector(".task-text").textContent = tarea.text;
+                    guardar();
+                }
+                return;
+            }
+
+            // Completar: clic sobre el texto alterna la clase .completed
+            if(target.classList.contains("task-text")){
+                li.classList.toggle("completed");
+                tarea.completed = li.classList.contains("completed");
+                guardar();
+            }
+        })
+
+        /* ================= EJERCICIO 5: Persistencia de datos ================= */
+
+        // Guarda el arreglo en formato JSON en el almacenamiento local
+        function guardar(){
+            localStorage.setItem("tareas", JSON.stringify(task));
+        }
+
+        // Al cargar la página: recupera el JSON, lo procesa y vuelve a renderizar
+        document.addEventListener("DOMContentLoaded", ()=>{
+            const guardadas = localStorage.getItem("tareas");
+            task = guardadas ? JSON.parse(guardadas) : [];
+            render();
+        })
+
+    </script>
+    
+</body>
+</html>

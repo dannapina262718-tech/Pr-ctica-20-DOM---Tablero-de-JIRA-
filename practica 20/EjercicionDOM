@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>
+            "A simple page"
+        </title>
+    </head>
+
+    <body>
+        <section>
+
+            <p><a>"link.com"</a></p>
+            <p>paragraph ...</p>
+            <p>second paragraph</p>
+
+        </section>
+
+        <section>
+
+            <img src="sfgyufh">
+
+        </section>
+    </body>
+</html>
